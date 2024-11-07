@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdio.h>
+
 
 #define NUM_THREADS 2 
 
