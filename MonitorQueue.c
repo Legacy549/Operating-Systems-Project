@@ -11,14 +11,14 @@
 typedef struct Node{
     //all the information that nodes carry
     char *accountID;
-    int type;
+    char *type;
     int amount;
+    char *recipient;
     int transactionID;
     struct Node* next;
 }Node;
 
 //array of all the different transaction types
-char types[6][30] = {"CreateAccount", "Deposit", "Withdraw", "Transfer", "Balance", "CloseAccount"};
 int transactionID = 0;
 
 struct Node* head = NULL;
@@ -33,7 +33,8 @@ bool isEmpty(){
 //prints the data of the first element
 void peek(){
     if(!isEmpty()){
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", head->transactionID, head->accountID, types[head->type], head->amount);
+        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
+        head->transactionID, head->accountID, head->type, head->amount, head->recipient);
     }
     else{
         printf("Queue is empty\n");
@@ -49,7 +50,8 @@ void printQueue(){
 
     printf("Current status of the Queue\n");
     printf("---------------------------------------------------------------------------\n");
-    printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", head->transactionID, head->accountID, types[head->type], head->amount);
+    printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
+    head->transactionID, head->accountID, head->type, head->amount, head->recipient);
 
     Node* currentPtr = head;
 
@@ -57,14 +59,15 @@ void printQueue(){
     //then this while traverses the queue printing everything
     while(currentPtr->next != NULL){
         currentPtr = currentPtr->next;
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", currentPtr->transactionID, currentPtr->accountID, types[currentPtr->type], currentPtr->amount);
+        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
+        currentPtr->transactionID, currentPtr->accountID, currentPtr->type, currentPtr->amount, currentPtr->recipient);
     }
 
     printf("\n");
 }
 
 //adds transaction to the end of the queue
-void enqueue (char accountID[], int type, int amount){
+void enqueue (char accountID[], char type[], int amount, char recipient[]){
     Node* newNode = (Node*)malloc(sizeof(Node));
     if(!newNode){
         fprintf(stderr, "Memory allocation failed\n");
@@ -75,6 +78,7 @@ void enqueue (char accountID[], int type, int amount){
     newNode->accountID = accountID;
     newNode->type = type;
     newNode->amount = amount;
+    newNode->recipient = recipient;
     newNode->next = NULL;
     
     if(isEmpty()){
@@ -88,8 +92,13 @@ void enqueue (char accountID[], int type, int amount){
     printQueue();
 }
 
+//used to possibly get infomation from queue
+struct Node headNode(){
+    Node temp = {head->accountID, head->amount,head->type, head->recipient};
+    return temp;
+}
+
 //deletes transaction at front of queue
-//probably will need to run the transaction 
 void dequeue(){
     if(isEmpty()){
         printf("Queue is empty\n");

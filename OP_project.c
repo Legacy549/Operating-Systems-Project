@@ -5,10 +5,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
+#include "MonitorQueue.c"
 
 #define MAX_ACCOUNTS 100
 #define MAX_INPUT_LENGTH 100
-
+//./OP_project test_input.txt 
 typedef struct {
     char account_id[20];
     int balance;
@@ -28,7 +29,6 @@ int find_account(Account accounts[], int num_accounts, char *account_id) {
     }
     return -1;
 }
-
 // Handle transactions for the account
 void handle_transaction(int read_fd, int write_fd, Account *account) {
     char buffer[MAX_INPUT_LENGTH];
@@ -40,11 +40,14 @@ void handle_transaction(int read_fd, int write_fd, Account *account) {
 
         sscanf(buffer, "%*s %s %d %s", transaction_type, &amount, recipient);
 
+        
+
         // Lock the account before processing the transaction
         pthread_mutex_lock(&account->lock);
-
+        enqueue(account->account_id, transaction_type, amount, recipient);
         if (strcmp(transaction_type, "Create") == 0) {
             if (account->open) {
+                //there is a bug that shows that the account already exists when they dont.
                 snprintf(buffer, MAX_INPUT_LENGTH, "Account %s already exists\n", account->account_id);
             } else {
                 account->balance = amount;
@@ -162,7 +165,6 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(file);
-
     // Close all pipes and wait for child processes to finish
     for (int i = 0; i < num_accounts; i++) {
         close(accounts[i].write_fd);
