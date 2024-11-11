@@ -2,117 +2,174 @@
 //Email: Kobe.rowland@okstate.edu
 //Date: 11/2/2024
 //Program Description: Implementation of queue. 
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>  
 
+#define QUEUE_SIZE 30  
 
-typedef struct Node{
-    //all the information that nodes carry
-    char *accountID;
-    char *type;
+// Shared node structure to represent a transaction
+typedef struct Node {
+    char accountID[50];
+    char type[20];
     int amount;
-    char *recipient;
+    char recipient[50];
     int transactionID;
-    struct Node* next;
-}Node;
+} Node;
 
-//array of all the different transaction types
-int transactionID = 0;
+// Shared queue structure that holds the queue data
+typedef struct Queue {
+    Node queue[QUEUE_SIZE];
+    int front;
+    int rear;
+    // Semaphore for synchronization between processes
+    sem_t lock;  
+} SharedQueue;
 
-struct Node* head = NULL;
-struct Node* tail = NULL;
+// Shared memory segments for the queue and transactionID
+SharedQueue *shared_queue;
+int *transactionID;
 
-//checks if linked list is empty and 
-//returns boolean to use in other functions
-bool isEmpty(){
-    return head == NULL;
+// Function to create and attach the shared memory segments
+int create_shared_memory() {
+    // Generate a unique key for shared memory
+    key_t key = ftok("/tmp", 'a');
+    if (key == -1) {
+        perror("ftok failed");
+        return -1;
+    }
+
+    // Create shared memory for the queue
+    int shm_id_queue = shmget(key, sizeof(SharedQueue), IPC_CREAT | 0666);
+    if (shm_id_queue == -1) {
+        perror("shmget failed for queue");
+        return -1;
+    }
+
+    // Create shared memory for the global transactionID
+    int shm_id_txn = shmget(key + 1, sizeof(int), IPC_CREAT | 0666);
+    if (shm_id_txn == -1) {
+        perror("shmget failed for transactionID");
+        return -1;
+    }
+
+    // Attach shared memory segments
+    shared_queue = (SharedQueue *)shmat(shm_id_queue, NULL, 0);
+    if (shared_queue == (void *)-1) {
+        perror("shmat failed for queue");
+        return -1;
+    }
+
+    transactionID = (int *)shmat(shm_id_txn, NULL, 0);
+    if (transactionID == (void *)-1) {
+        perror("shmat failed for transactionID");
+        return -1;
+    }
+
+    // Initialize the shared queue (front and rear pointers)
+    shared_queue->front = 0;
+    shared_queue->rear = 0;
+
+    // Initialize semaphore for synchronization (using unnamed semaphore in shared memory)
+    if (sem_init(&shared_queue->lock, 1, 1) == -1) {
+        perror("sem_init failed");
+        return -1;
+    }
+
+    // Initialize global transactionID
+    *transactionID = 0;
+
+    return 0;
 }
 
-//prints the data of the first element
-void peek(){
-    if(!isEmpty()){
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
-        head->transactionID, head->accountID, head->type, head->amount, head->recipient);
-    }
-    else{
+// Function to check if the queue is empty
+bool isEmpty() {
+    return shared_queue->front == shared_queue->rear;
+}
+
+
+// Function to print the entire queue
+void printQueue() {
+    // Lock using semaphore
+    sem_wait(&shared_queue->lock);  
+
+    if (isEmpty()) {
         printf("Queue is empty\n");
+    } else {
+        printf("\nCurrent status of the Queue:\n");
+        printf("---------------------------------------------------------------------------\n");
+
+        // Print all transactions in the queue
+        int i = shared_queue->front;
+        while (i != shared_queue->rear) {
+            printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient:%s\n", 
+                    shared_queue->queue[i].transactionID, 
+                    shared_queue->queue[i].accountID, 
+                    shared_queue->queue[i].type, 
+                    shared_queue->queue[i].amount, 
+                    shared_queue->queue[i].recipient);
+            i = (i + 1) % QUEUE_SIZE;
+        }
     }
+    // Unlock using semaphore
+    sem_post(&shared_queue->lock);
 }
 
-//prints entire queue
-void printQueue(){
-    if(isEmpty()){
-        printf("Queue is empty");
-        return;
+// Function to dequeue a transaction from the front of the queue
+void dequeue() {
+    // Lock using semaphore
+    sem_wait(&shared_queue->lock);  
+
+    if (isEmpty()) {
+        printf("Queue is empty\n");
+    } else {
+        // Remove transaction from the front of the queue
+        shared_queue->front = (shared_queue->front + 1) % QUEUE_SIZE;
     }
-
-    printf("Current status of the Queue\n");
-    printf("---------------------------------------------------------------------------\n");
-    printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
-    head->transactionID, head->accountID, head->type, head->amount, head->recipient);
-
-    Node* currentPtr = head;
-
-    //the head element is printed with the code above
-    //then this while traverses the queue printing everything
-    while(currentPtr->next != NULL){
-        currentPtr = currentPtr->next;
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Amount:%d, Recipient: %s\n", 
-        currentPtr->transactionID, currentPtr->accountID, currentPtr->type, currentPtr->amount, currentPtr->recipient);
-    }
-
-    printf("\n");
+    // Unlock using semaphore
+    sem_post(&shared_queue->lock);  
 }
 
-//adds transaction to the end of the queue
-void enqueue (char accountID[], char type[], int amount, char recipient[]){
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    if(!newNode){
-        fprintf(stderr, "Memory allocation failed\n");
-        return;
+// Function to enqueue a new transaction into the shared queue
+void enqueue(char accountID[], char type[], int amount, char recipient[]) {
+    sem_wait(&shared_queue->lock);  
+
+    // Check if the queue is full
+    if ((shared_queue->rear + 1) % QUEUE_SIZE == shared_queue->front) {
+        printf("Queue is full, cannot enqueue transaction\n");
+    } else {
+        // Add the transaction to the queue
+        (*transactionID)++;  // Increment global transactionID
+        shared_queue->queue[shared_queue->rear].transactionID = *transactionID;
+        strcpy(shared_queue->queue[shared_queue->rear].accountID, accountID);
+        strcpy(shared_queue->queue[shared_queue->rear].type, type);
+        shared_queue->queue[shared_queue->rear].amount = amount;
+        strcpy(shared_queue->queue[shared_queue->rear].recipient, recipient);
+        // Update the rear index
+        shared_queue->rear = (shared_queue->rear + 1) % QUEUE_SIZE;
+        
     }
-    transactionID ++;
-    newNode->transactionID = transactionID;
-    newNode->accountID = accountID;
-    newNode->type = type;
-    newNode->amount = amount;
-    newNode->recipient = recipient;
-    newNode->next = NULL;
     
-    if(isEmpty()){
-        head = newNode;
-        tail = newNode;
-    }
-    else{
-        tail->next = newNode;
-        tail = newNode;
-    }
+    sem_post(&shared_queue->lock);  
+
+    // Call printQueue after enqueue to show the current state of the queue
     printQueue();
 }
 
-//used to possibly get infomation from queue
-struct Node headNode(){
-    Node temp = {head->accountID, head->amount,head->type, head->recipient};
-    return temp;
-}
-
-//deletes transaction at front of queue
-void dequeue(){
-    if(isEmpty()){
-        printf("Queue is empty\n");
-        return;
+// Function to clean up shared memory after use
+void cleanup_shared_memory() {
+    // Detach shared memory from the address space
+    if (shmdt(shared_queue) == -1) {
+        perror("shmdt failed for queue");
     }
-
-    Node* temp = head;
-    head = head->next;
-
-    free(temp);
-    if(head == NULL){
-        tail = NULL;
+    if (shmdt(transactionID) == -1) {
+        perror("shmdt failed for transactionID");
     }
 }
-
-
 

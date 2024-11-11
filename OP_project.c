@@ -40,11 +40,11 @@ void handle_transaction(int read_fd, int write_fd, Account *account) {
 
         sscanf(buffer, "%*s %s %d %s", transaction_type, &amount, recipient);
 
-        
-
         // Lock the account before processing the transaction
         pthread_mutex_lock(&account->lock);
+
         enqueue(account->account_id, transaction_type, amount, recipient);
+        
         if (strcmp(transaction_type, "Create") == 0) {
             if (account->open) {
                 //there is a bug that shows that the account already exists when they dont.
@@ -85,6 +85,7 @@ void handle_transaction(int read_fd, int write_fd, Account *account) {
 }
 
 int main(int argc, char *argv[]) {
+    create_shared_memory();
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
         return 1;
@@ -176,7 +177,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < MAX_ACCOUNTS; i++) {
         pthread_mutex_destroy(&accounts[i].lock);
     }
-
+    cleanup_shared_memory();
     return 0;
 }
  

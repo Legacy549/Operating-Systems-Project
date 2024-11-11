@@ -2,6 +2,7 @@
 A1 Create 40
 A2 Create 1
 A1 Inquiry
+A1 Transfer 1 A2
 A1 Deposit 10
 A1 Inquiry
 A1 Close
