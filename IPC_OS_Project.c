@@ -1,4 +1,10 @@
 // IPC_OS_Project.c
+
+//Author Name: Jacob Mitchell
+//Email: Jacob.a.mitchell@okstate.edu
+//Date: 11/12/24
+//Program Description: implements IPC
+
 #include "IPC_OS_Project.h"
 #include <sys/shm.h>
 #include <string.h>
