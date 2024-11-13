@@ -1,3 +1,8 @@
+//Author Name: Kobe Rowland
+//Email: Kobe.rowland@okstate.edu
+//Date: 11/2/2024
+//Program Description: Implementation of queue. 
+
 #include "MonitorQueue.h"
 #include <stdio.h>
 #include <stdlib.h>
