@@ -1,3 +1,8 @@
+//Author Name: Kobe Rowland
+//Email: Kobe.rowland@okstate.edu
+//Date: 11/2/2024
+//Program Description: Initilization of Monitorqueue.c 
+
 #ifndef MONITORQUEUE_H
 #define MONITORQUEUE_H
 
