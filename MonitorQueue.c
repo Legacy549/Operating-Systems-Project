@@ -1,109 +1,54 @@
-//Author Name: Kobe Rowland
-//Email: Kobe.rowland@okstate.edu
-//Date: 11/2/2024
-//Program Description: Implementation of queue. 
-
+#include "MonitorQueue.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
+#include <pthread.h>
 
-
-typedef struct Node{
-    //all the information that nodes carry
-    char *accountID;
-    int type;
-    int amount;
-    int transactionID;
-    struct Node* next;
-}Node;
-
-//array of all the different transaction types
-char types[6][30] = {"CreateAccount", "Deposit", "Withdraw", "Transfer", "Balance", "CloseAccount"};
-int transactionID = 0;
-
-struct Node* head = NULL;
-struct Node* tail = NULL;
-
-//checks if linked list is empty and 
-//returns boolean to use in other functions
-bool isEmpty(){
-    return head == NULL;
+void initializeMonitorQueue(MonitorQueue *queue, int size) {
+    queue->elements = malloc(size * sizeof(QueueElement));
+    queue->maxSize = size;
+    queue->front = 0;
+    queue->rear = 0;
+    pthread_mutex_init(&queue->queueLock, NULL);
 }
 
-//prints the data of the first element
-void peek(){
-    if(!isEmpty()){
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", head->transactionID, head->accountID, types[head->type], head->amount);
-    }
-    else{
-        printf("Queue is empty\n");
-    }
+void destroyMonitorQueue(MonitorQueue *queue) {
+    free(queue->elements);
+    pthread_mutex_destroy(&queue->queueLock);
 }
 
-//prints entire queue
-void printQueue(){
-    if(isEmpty()){
-        printf("Queue is empty");
-        return;
+void enterMonitorQueue(MonitorQueue *queue, char accountID[]) {
+    pthread_mutex_lock(&queue->queueLock);
+    printf("Entering monitor queue for account %s\n", accountID);
+    displayQueueStatus(queue);
+    pthread_mutex_unlock(&queue->queueLock);
+}
+
+void exitMonitorQueue(MonitorQueue *queue, char accountID[]) {
+    pthread_mutex_lock(&queue->queueLock);
+    printf("Exiting monitor queue for account %s\n", accountID);
+    displayQueueStatus(queue);
+    pthread_mutex_unlock(&queue->queueLock);
+}
+
+void enqueue(MonitorQueue *queue, QueueElement element) {
+    pthread_mutex_lock(&queue->queueLock);
+    queue->elements[queue->rear] = element;
+    queue->rear = (queue->rear + 1) % queue->maxSize;
+    pthread_mutex_unlock(&queue->queueLock);
+}
+
+QueueElement dequeue(MonitorQueue *queue) {
+    pthread_mutex_lock(&queue->queueLock);
+    QueueElement element = queue->elements[queue->front];
+    queue->front = (queue->front + 1) % queue->maxSize;
+    pthread_mutex_unlock(&queue->queueLock);
+    return element;
+}
+
+void displayQueueStatus(const MonitorQueue *queue) {
+    for (int i = queue->front; i != queue->rear; i = (i + 1) % queue->maxSize) {
+        printf("[%s %d %d] ", queue->elements[i].accountID, queue->elements[i].transactionType, queue->elements[i].amount);
     }
-
-    printf("Current status of the Queue\n");
-    printf("---------------------------------------------------------------------------\n");
-    printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", head->transactionID, head->accountID, types[head->type], head->amount);
-
-    Node* currentPtr = head;
-
-    //the head element is printed with the code above
-    //then this while traverses the queue printing everything
-    while(currentPtr->next != NULL){
-        currentPtr = currentPtr->next;
-        printf("Transaction ID:%d, Account ID:%s, Transaction type:%s, Ammount:%d\n", currentPtr->transactionID, currentPtr->accountID, types[currentPtr->type], currentPtr->amount);
-    }
-
     printf("\n");
 }
-
-//adds transaction to the end of the queue
-void enqueue (char accountID[], int type, int amount){
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    if(!newNode){
-        fprintf(stderr, "Memory allocation failed\n");
-        return;
-    }
-    transactionID ++;
-    newNode->transactionID = transactionID;
-    newNode->accountID = accountID;
-    newNode->type = type;
-    newNode->amount = amount;
-    newNode->next = NULL;
-    
-    if(isEmpty()){
-        head = newNode;
-        tail = newNode;
-    }
-    else{
-        tail->next = newNode;
-        tail = newNode;
-    }
-    printQueue();
-}
-
-//deletes transaction at front of queue
-//probably will need to run the transaction 
-void dequeue(){
-    if(isEmpty()){
-        printf("Queue is empty\n");
-        return;
-    }
-
-    Node* temp = head;
-    head = head->next;
-
-    free(temp);
-    if(head == NULL){
-        tail = NULL;
-    }
-}
-
-
-
