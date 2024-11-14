@@ -1,4 +1,9 @@
 // transactionHandler.c
+
+//Author Name: Karson Younger
+//Email: karson.younger@okstate.edu
+//Date: 11/13/24
+//Program Description: This handles all accounts and makes sure an account isnt create twice.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +12,8 @@
 #include "MonitorQueue.h"
 #include "IPC_OS_Project.h"
 
-MonitorQueue queue; // Monitor queue for synchronization
+// Monitor queue for intialization
+MonitorQueue queue; 
 
 int findAccount(Account accounts[], int numAccounts, char *accountID) {
     for (int i = 0; i < numAccounts; i++) {
@@ -20,21 +26,24 @@ int findAccount(Account accounts[], int numAccounts, char *accountID) {
 
 void handleTransaction(int readFd, int writeFd, Account *account, Account accounts[], int numAccounts, SharedMemorySegment *shmPtr) {
     char buffer[MAX_INPUT_LENGTH];
-    int isNewlyCreated = 1;  // Flag to check if it's the first time handling "Create"
+    // Flag to check if it's the first time handling Create
+    int isNewlyCreated = 1;  
     while (read(readFd, buffer, MAX_INPUT_LENGTH) > 0) {
         char transactionType[20];
         int amount = 0;
         char recipient[20] = "";
 
         sscanf(buffer, "%*s %s %d %s", transactionType, &amount, recipient);
-        enterMonitorQueue(&queue, account->accountID);  // Synchronize entering queue
-
+        // Synchronize the entering queue
+        enterMonitorQueue(&queue, account->accountID);  
+        //these check what transaction is going to be used adn implements them
         if (strcmp(transactionType, "Create") == 0) {
-            if (isNewlyCreated) {  // On first creation attempt, mark success
+            //marks creation a success when creating for the first time
+            if (isNewlyCreated) { 
                 account->balance = amount;
                 account->open = 1;
                 snprintf(buffer, MAX_INPUT_LENGTH, "Account %s created successfully with balance %d\n", account->accountID, account->balance);
-                isNewlyCreated = 0;  // Set flag to avoid further checks
+                isNewlyCreated = 0; 
             } else {
                 snprintf(buffer, MAX_INPUT_LENGTH, "Account %s already exists\n", account->accountID);
             }
@@ -78,15 +87,17 @@ void handleTransaction(int readFd, int writeFd, Account *account, Account accoun
         }
 
         write(writeFd, buffer, strlen(buffer) + 1);
-        exitMonitorQueue(&queue, account->accountID);  // Synchronize exiting queue
+        // Synchronize exiting queue
+        exitMonitorQueue(&queue, account->accountID);  
     }
 }
-
+ // Initialize the shared memory
 void initializeBankingSystem(int expectedNumUsers, int *shmID, SharedMemorySegment **shmPtr) {
     initializeMonitorQueue(&queue, expectedNumUsers);
-    initSharedMemory(shmID, shmPtr);  // Initialize shared memory
-}
 
+    initSharedMemory(shmID, shmPtr); 
+
+//destroy the sharded memeory
 void destroyBankingSystem(int shmID, SharedMemorySegment *shmPtr) {
     destroyMonitorQueue(&queue);
     destroySharedMemory(shmID, shmPtr);
