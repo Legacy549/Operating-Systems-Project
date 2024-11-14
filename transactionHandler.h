@@ -1,5 +1,9 @@
 // transactionHandler.h
-// transactionHandler.h
+
+//Author Name: Karson Younger
+//Email: karson.younger@okstate.edu
+//Date: 11/13/24
+//Program Description: Header for transactionHandler.c
 #ifndef TRANSACTIONHANDLER_H
 #define TRANSACTIONHANDLER_H
 
