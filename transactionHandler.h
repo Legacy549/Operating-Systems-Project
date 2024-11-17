@@ -2,8 +2,9 @@
 
 //Author Name: Karson Younger
 //Email: karson.younger@okstate.edu
-//Date: 11/13/24
+//Date: 11/17/24
 //Program Description: Header for transactionHandler.c
+
 #ifndef TRANSACTIONHANDLER_H
 #define TRANSACTIONHANDLER_H
 
@@ -14,20 +15,10 @@
 #define MAX_ACCOUNTS 100
 #define MAX_INPUT_LENGTH 100  
 
-// Account structure
-typedef struct {
-    char accountID[20];
-    int balance;
-    int open;
-    pid_t pid;
-    int readFd;
-    int writeFd;
-} Account;
-
 // Function declarations
-int findAccount(Account accounts[], int numAccounts, char *accountID);
-void handleTransaction(int readFd, int writeFd, Account *account, Account accounts[], int numAccounts, SharedMemorySegment *shmPtr);
+void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySegment *shmPtr);
+int findAccount(SharedMemorySegment *shmPtr, const char *accountID);
 void initializeBankingSystem(int expectedNumUsers, int *shmID, SharedMemorySegment **shmPtr);
 void destroyBankingSystem(int shmID, SharedMemorySegment *shmPtr);
 
-#endif // TRANSACTIONHANDLER_H
+#endif 
