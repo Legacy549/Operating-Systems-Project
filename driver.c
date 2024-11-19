@@ -121,6 +121,7 @@ void readTransactions(FILE *file, int *numAccounts, Account accounts[MAX_ACCOUNT
             printf("%s", response);
         } else {
             printf("Account %s not found\n", accountID);
+            //logTransaction(shmPtr, transactionType, accountID, "", amount, "failed");
         }
     }
 }

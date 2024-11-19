@@ -97,6 +97,9 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
                 {
                     shmPtr->accounts[accountIndex].balance = account->balance; 
                 }
+                else{
+                    logTransaction(shmPtr, transactionType, account->accountID, "", amount, "failed");
+                }
                 snprintf(buffer, MAX_INPUT_LENGTH, "Deposited %d into account %s\n", amount, account->accountID);
                 logTransaction(shmPtr, "DEPOSIT", account->accountID, NULL, amount, "success");
             }
@@ -110,6 +113,9 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
                     if (accountIndex != -1)
                     {
                         shmPtr->accounts[accountIndex].balance = account->balance; 
+                    }
+                    else{
+                        logTransaction(shmPtr, transactionType, account->accountID, "", amount, "failed");
                     }
                     snprintf(buffer, MAX_INPUT_LENGTH, "Withdrew %d from account %s\n", amount, account->accountID);
                     logTransaction(shmPtr, "WITHDRAW", account->accountID, NULL, amount, "success");
@@ -144,6 +150,10 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
                 if (accountIndex != -1)
                 {
                     shmPtr->accounts[accountIndex].open = 0; 
+                }
+                else
+                {
+                    logTransaction(shmPtr, transactionType, account->accountID, "", amount, "failed");
                 }
                 snprintf(buffer, MAX_INPUT_LENGTH, "Account %s closed\n", account->accountID);
                 logTransaction(shmPtr, "CLOSE", account->accountID, NULL, 0, "success");
