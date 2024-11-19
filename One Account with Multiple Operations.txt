@@ -1,0 +1,6 @@
+1
+A1 Close
+A1 Deposit 100
+A1 Withdraw 100
+A1 INQUIRY
+A1 Transfer A2 100

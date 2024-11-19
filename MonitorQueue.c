@@ -1,3 +1,5 @@
+//MonitorQueue.c
+
 //Author Name: Kobe Rowland
 //Email: Kobe.rowland@okstate.edu
 //Date: 11/2/2024
@@ -26,11 +28,9 @@ void enterMonitorQueue(MonitorQueue *queue, char accountID[]) {
     pthread_mutex_lock(&queue->queueLock);
     printf("Entering monitor queue for account %s\n", accountID);
     displayQueueStatus(queue);
-    pthread_mutex_unlock(&queue->queueLock);
 }
 
 void exitMonitorQueue(MonitorQueue *queue, char accountID[]) {
-    pthread_mutex_lock(&queue->queueLock);
     printf("Exiting monitor queue for account %s\n", accountID);
     displayQueueStatus(queue);
     pthread_mutex_unlock(&queue->queueLock);
@@ -52,8 +52,10 @@ QueueElement dequeue(MonitorQueue *queue) {
 }
 
 void displayQueueStatus(const MonitorQueue *queue) {
-    for (int i = queue->front; i != queue->rear; i = (i + 1) % queue->maxSize) {
-        printf("[%s %d %d] ", queue->elements[i].accountID, queue->elements[i].transactionType, queue->elements[i].amount);
-    }
+    if (queue->front != queue->rear) {
+        for (int i = queue->front; i != queue->rear; i = (i + 1) % queue->maxSize) {
+            printf("[%s %d %d] ", queue->elements[i].accountID, queue->elements[i].transactionType, queue->elements[i].amount);
+        }
     printf("\n");
+}
 }
