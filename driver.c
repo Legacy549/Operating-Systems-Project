@@ -3,6 +3,7 @@
 //Author Name: Karson Younger
 //Email: karson.younger@okstate.edu
 //Date: 11/17/24
+//Group: Group F
 //Program Description: This is the main program driver and is repsonible for reading the transactions and forking accounts
 
 #include <stdio.h>
