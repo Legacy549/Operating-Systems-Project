@@ -48,7 +48,7 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
             {
                 // Check if the account already exists
                 int accountIndex = findAccount(shmPtr, account->accountID);
-                if (accountIndex == -1)
+                if (accountIndex == -1 && amount > -1)
                 {
                     // Find first available slot in shared memory
                     for (int i = 0; i < MAX_ACCOUNTS; i++)
@@ -90,22 +90,27 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
         {
             if (strcmp(transactionType, "Deposit") == 0)
             {
-                account->balance += amount;
-                // Update shared memory balance for this account
-                int accountIndex = findAccount(shmPtr, account->accountID);
-                if (accountIndex != -1)
-                {
-                    shmPtr->accounts[accountIndex].balance = account->balance; 
+                if(amount > 0){
+                    account->balance += amount;
+                    // Update shared memory balance for this account
+                    int accountIndex = findAccount(shmPtr, account->accountID);
+                    if (accountIndex != -1)
+                    {
+                        shmPtr->accounts[accountIndex].balance = account->balance; 
+                    }
+                    else{
+                        logTransaction(shmPtr, transactionType, account->accountID, "", amount, "failed");
+                    }
+                    snprintf(buffer, MAX_INPUT_LENGTH, "Deposited %d into account %s\n", amount, account->accountID);
+                    logTransaction(shmPtr, "DEPOSIT", account->accountID, NULL, amount, "success");
                 }
                 else{
                     logTransaction(shmPtr, transactionType, account->accountID, "", amount, "failed");
                 }
-                snprintf(buffer, MAX_INPUT_LENGTH, "Deposited %d into account %s\n", amount, account->accountID);
-                logTransaction(shmPtr, "DEPOSIT", account->accountID, NULL, amount, "success");
             }
             else if (strcmp(transactionType, "Withdraw") == 0)
             {
-                if (account->balance >= amount)
+                if (account->balance >= amount && amount > 0)
                 {
                     account->balance -= amount;
                     // Update shared memory balance for this account
@@ -166,7 +171,7 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
                 // Validate both accounts and sender's balance
                 if (senderIndex != -1 && recipientIndex != -1 &&
                     shmPtr->accounts[senderIndex].open && shmPtr->accounts[recipientIndex].open &&
-                    shmPtr->accounts[senderIndex].balance >= amount)
+                    shmPtr->accounts[senderIndex].balance >= amount && amount > 0)
                 {
                     // Update balances in shared memory
                     shmPtr->accounts[senderIndex].balance -= amount;
