@@ -16,7 +16,7 @@
 
 #define MAX_INPUT_LENGTH 100
 
-// Function to acquire a shared lock with timeout
+// Function to acquire a shared lock with timeout, takes in the resource that needs to be locked and the time out time.
 int acquireLockWithTimeout(int lockFile, int timeoutSeconds) {
     int elapsed = 0;
     while (elapsed < timeoutSeconds) {
@@ -38,7 +38,7 @@ int acquireLockWithTimeout(int lockFile, int timeoutSeconds) {
     return -1;  
 }
 
-// our read function
+// our read function this takes in the file and number of accounts as well as shared memory pointers to properly delegate transactions
 void readTransactions(FILE *file, int *numAccounts, Account accounts[MAX_ACCOUNTS], SharedMemorySegment *shmPtr, int expectedNumUsers) {
     char line[MAX_INPUT_LENGTH];
     
