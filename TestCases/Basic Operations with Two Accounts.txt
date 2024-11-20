@@ -1,0 +1,12 @@
+2
+A1 Create 300
+A2 Create 800
+A1 Deposit 100
+A2 Withdraw 200
+A1 Transfer 50 A2
+A2 Deposit 300
+A1 Inquiry
+A2 Inquiry
+A1 Close
+A2 Close
+

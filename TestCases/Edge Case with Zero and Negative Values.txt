@@ -1,0 +1,16 @@
+3
+A1 Create 0
+A2 Create 100
+A3 Create 200
+A1 Deposit 0
+A2 Withdraw 0
+A3 Transfer -50 A1
+A1 Transfer 50 A2
+A2 Deposit -100
+A1 Inquiry
+A2 Inquiry
+A3 Inquiry
+A1 Close
+A2 Close
+A3 Close
+

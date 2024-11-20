@@ -1,0 +1,16 @@
+3
+A1 Create 300
+A2 Create 500
+A3 Create 1000
+A1 Withdraw 350
+A2 Withdraw 600
+A3 Transfer 1200 A1
+A1 Transfer 200 A2
+A2 Transfer 200 A3
+A1 Inquiry
+A2 Inquiry
+A3 Inquiry
+A1 Close
+A2 Close
+A3 Close
+
