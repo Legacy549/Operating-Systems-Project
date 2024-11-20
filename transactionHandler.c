@@ -15,7 +15,7 @@
 
 MonitorQueue queue; // Monitor queue for synchronization
 
-// Find an account by ID in shared memory
+// Find an account by ID in shared memory, takes in the shared memory poitner and account ID of the target acount and returns its index if found. 
 int findAccount(SharedMemorySegment *shmPtr, const char *accountID)
 {
     for (int i = 0; i < MAX_ACCOUNTS; i++)
@@ -28,7 +28,7 @@ int findAccount(SharedMemorySegment *shmPtr, const char *accountID)
     return -1; // Return -1 if account is not found
 }
 
-// Handle transactions (Create, Deposit, Withdraw, Transfer, etc.)
+// Handle transactions (Create, Deposit, Withdraw, Transfer, etc.) this will take in the pipeline variables adn account pointers as well as shared memory poiters and execute transactions. 
 void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySegment *shmPtr)
 {
     char buffer[MAX_INPUT_LENGTH];
@@ -195,13 +195,13 @@ void handleTransaction(int readFd, int writeFd, Account *account, SharedMemorySe
         exitMonitorQueue(&queue, account->accountID); 
     }
 }
-
+//these take in shared memory pointers and expected number of users/accoutns and activate the queue and shared memory.
 void initializeBankingSystem(int expectedNumUsers, int *shmID, SharedMemorySegment **shmPtr)
 {
     initializeMonitorQueue(&queue, expectedNumUsers);
     initSharedMemory(shmID, shmPtr);
 }
-
+//destroys the targe shared memory Id and segment as well as the queue
 void destroyBankingSystem(int shmID, SharedMemorySegment *shmPtr)
 {
     destroyMonitorQueue(&queue);
