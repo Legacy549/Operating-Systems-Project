@@ -1,5 +1,5 @@
 // SyncronizationWithMonitors.c
-
+// Group F
 //Author Name: Saah Sicarr
 //Email: Saah.sicarr@Okstate.edu
 //Date: 11/13/24
