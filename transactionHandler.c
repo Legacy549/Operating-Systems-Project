@@ -3,6 +3,7 @@
 // Author Name: Karson Younger
 // Email: karson.younger@okstate.edu
 // Date: 11/17/24
+//Group: Group F
 // Program Description: This handles all accounts and makes sure an account isnt create twice.
 
 #include <stdio.h>
