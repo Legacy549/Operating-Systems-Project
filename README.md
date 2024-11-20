@@ -16,7 +16,7 @@ Make sure compilation did not fail. There should be a file named a.out you can c
 ```bash
 ls
 ```
-simply run a.out
+simply run a.out with your input
 ```bash
 ./a.out your_input.txt
 ```
